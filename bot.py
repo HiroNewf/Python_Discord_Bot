@@ -2,17 +2,18 @@ import discord
 from discord.ext import commands
 import re
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import pytz
 import hashlib
 import bcrypt
+import json
 
 intents = discord.Intents.all()
 
-bot = commands.Bot(command_prefix="^", help_command=None, intents=intents)  # Disable the default help command
+bot = commands.Bot(command_prefix="^", intents=intents, help_command=None)
 
 rockyou_path = 'rockyou.txt'
+timezones_file = 'user_timezones.json'
 
 @bot.event
 async def on_ready():
@@ -20,15 +21,15 @@ async def on_ready():
 
 @bot.command(name='hello')
 async def hello(ctx):
-    """A simple greeting command."""
+    """Greeting / Testing Command"""
     await ctx.send('Hello!')
 
 @bot.command(name='crack')
 async def identify_hash(ctx, hash_input):
     """
-    Identifies the hash type and attempts to crack the password.
+    Identifies the hash type and attempts to crack the password with rockyou.txt
 
-    :param hash_input: The input hash to be identified and cracked.
+    param:hash_input = The input hash to be identified and cracked
     """
     async with ctx.typing():
         result = await crack_password(hash_input)
@@ -36,9 +37,9 @@ async def identify_hash(ctx, hash_input):
 
 async def crack_password(hash_input):
     """
-    Attempts to crack the password for a given hash.
+    Attempts to crack the password for a given hash with rockyou.txt
 
-    :param hash_input: The input hash to be cracked.
+    param:hash_input: The input hash to be cracked
     """
     # Hash formats for identification
     hash_formats = {
@@ -100,11 +101,11 @@ async def crack_password(hash_input):
 
 def hash_password(password, hash_type):
     """
-    Hashes a password using the specified hash type.
+    Hashes a password using the specified hash type
 
-    :param password: The password to be hashed.
-    :param hash_type: The hash algorithm to use.
-    :return: The hashed password.
+    :param password: The password to be hashed
+    :param hash_type: The hash algorithm to use
+    :return: The hashed password
     """
     if hash_type == 'MD5':
         return hashlib.new('md5', password.encode()).hexdigest()
@@ -133,42 +134,154 @@ def hash_password(password, hash_type):
     return None  # Return None if the hash_type is not recognized
 
 @bot.command(name='time')
-async def get_time(ctx):
+async def get_time(ctx, timezone_str=None):
     """
-    Displays the current time in the user's local timezone.
+    Displays the current time in the specified timezone or the user's set timezone.
 
-    Example command: ^time
+    Example command: ^time UTC
     """
-    user_timezone = get_user_timezone(ctx.author)
+    if timezone_str:
+        await display_time(ctx, timezone_str)
+
+
+    else:
+        user_timezone = get_user_timezone(ctx.author)
+        await display_time(ctx, user_timezone.zone)
+
+async def display_time(ctx, timezone_str):
+    try:
+        user_timezone = get_user_timezone(ctx.author) if timezone_str is None else get_timezone(timezone_str)
+    except ValueError as e:
+        return await ctx.send(str(e))
+
     current_time = datetime.now(timezone.utc).astimezone(user_timezone)
     await ctx.send(f'The current time is: {current_time.strftime("%Y-%m-%d %H:%M:%S %Z")}')
 
+def get_timezone(timezone_str):
+    """
+    Retrieves the timezone object based on the provided timezone string.
+
+    :param timezone_str: The timezone string.
+    :return: The timezone object.
+    """
+    try:
+        # Attempt to create timezone using standard format
+        return pytz.timezone(timezone_str)
+    except pytz.UnknownTimeZoneError:
+        pass
+
+    # Try to map common abbreviations to timezone names
+    abbreviations_mapping = {
+        'PST': 'America/Los_Angeles',
+        'JST': 'Asia/Tokyo',
+        'UTC': 'UTC',
+        'EST': 'America/New_York',
+        'CST': 'America/Chicago',
+        'MST': 'America/Denver',
+        'PDT': 'America/Los_Angeles',
+        'MDT': 'America/Denver',
+        'CDT': 'America/Chicago',
+        'EDT': 'America/New_York',
+        # ... (other abbreviations)
+    }
+
+    # UTC offsets mapping
+    utc_offsets_mapping = {
+        'UTC+00:00': 'UTC',
+        'UTC+01:00': 'Europe/London',
+        'UTC+02:00': 'Europe/Paris',
+        'UTC+03:00': 'Europe/Moscow',
+        'UTC+04:00': 'Asia/Dubai',
+        'UTC+05:00': 'Asia/Karachi',
+        'UTC+06:00': 'Asia/Dhaka',
+        'UTC+07:00': 'Asia/Bangkok',
+        'UTC+08:00': 'Asia/Shanghai',
+        'UTC+09:00': 'Asia/Tokyo',
+        'UTC+10:00': 'Australia/Sydney',
+        'UTC+11:00': 'Pacific/Noumea',
+        'UTC+12:00': 'Pacific/Fiji',
+        'UTC-01:00': 'Atlantic/Azores',
+        'UTC-02:00': 'America/Noronha',
+        'UTC-03:00': 'America/Argentina/Buenos_Aires',
+        'UTC-04:00': 'America/New_York',
+        'UTC-05:00': 'America/Chicago',
+        'UTC-06:00': 'America/Denver',
+        'UTC-07:00': 'America/Los_Angeles',
+        'UTC-08:00': 'America/Anchorage',
+        'UTC-09:00': 'Pacific/Gambier',
+        'UTC-10:00': 'Pacific/Honolulu',
+        'UTC-11:00': 'Pacific/Pago_Pago',
+        'UTC-12:00': 'Pacific/Wake',
+        # ... (other UTC offsets)
+    }
+
+    mapped_timezone = abbreviations_mapping.get(timezone_str) or utc_offsets_mapping.get(timezone_str)
+    if mapped_timezone:
+        return pytz.timezone(mapped_timezone)
+
+    raise ValueError(f'Invalid timezone "{timezone_str}". Please provide a valid timezone like "America/New_York", "UTC+05:00", "PST", "JST", etc.')
+
 def get_user_timezone(user):
     """
-    Retrieves the user's timezone based on their Discord server nickname.
-    Assumes the nickname is in the format "[TZ] Username".
+    Retrieves the user's timezone based on their Discord user ID from the JSON file.
+    Assumes the user ID is the key in the JSON file.
 
     :param user: The Discord user.
     :return: The user's timezone.
     """
-    nickname_pattern = re.compile(r'\[([A-Za-z_]+)\]')
-    match = nickname_pattern.search(user.display_name)
-    if match:
-        timezone_str = match.group(1)
-        return pytz.timezone(timezone_str)
-
-    return timezone.utc  # Return UTC timezone by default
+    try:
+        with open(timezones_file, 'r') as file:
+            user_timezones = json.load(file)
+            timezone_str = user_timezones.get(str(user.id), 'UTC')
+            return get_timezone(timezone_str)
+    except FileNotFoundError:
+        return get_timezone('UTC')  # Return UTC timezone by default
 
 @bot.command(name='help')
 async def custom_help(ctx):
     """Displays a custom help message with information about available commands."""
     help_message = (
-        f"**Available Commands:**\n"
-        "`^hello`: A simple greeting command.\n"
-        "`^crack <hash>`: Identifies the hash type and attempts to crack the password.\n"
-        "   Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
-        "`^time`: Displays the current time in the user's local timezone.\n"
+        f"**General Commands:**\n"
+        "* `^hello`: A greeting/testing command, the bot should respond with 'Hello!'.\n"
+        "* `^time [timezone]`: Displays the current time in the specified timezone or the user's set timezone.\n"
+        " * Example: `^time UTC` or `^time America/New_York`\n"
+	"**Technical Commands:**\n"
+	"* `^crack <hash>`: Identifies the hash type and attempts to crack the password with the rockyou.txt worldlist. For more information on the hash types support reference the Github Page.\n"
+        " *  Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
     )
     await ctx.send(help_message)
 
-bot.run('TOKEN_HERE')
+@bot.command(name='settimezone')
+async def set_user_timezone(ctx, timezone_str):
+    """
+    Sets the timezone for the user in the server.
+
+    Example command: ^settimezone UTC
+    """
+    try:
+        user_timezone = get_timezone(timezone_str)
+    except ValueError as e:
+        return await ctx.send(str(e))
+
+    save_user_timezone(ctx.author.id, timezone_str)
+    await ctx.send(f'Timezone set to {timezone_str} for {ctx.author.display_name}')
+
+def save_user_timezone(user_id, timezone_str):
+    """
+    Saves the user's timezone to a JSON file.
+
+    :param user_id: The user's ID.
+    :param timezone_str: The timezone string.
+    """
+    try:
+        with open(timezones_file, 'r') as file:
+            user_timezones = json.load(file)
+    except FileNotFoundError:
+        user_timezones = {}
+
+    user_timezones[str(user_id)] = timezone_str
+
+    with open(timezones_file, 'w') as file:
+        json.dump(user_timezones, file)
+
+bot.run('TOKEN')
