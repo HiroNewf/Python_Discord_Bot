@@ -15,21 +15,24 @@ bot = commands.Bot(command_prefix="^", intents=intents, help_command=None)
 rockyou_path = 'rockyou.txt'
 timezones_file = 'user_timezones.json'
 
+# Event: Bot is ready
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
 
+# Command: Hello
 @bot.command(name='hello')
 async def hello(ctx):
     """Greeting / Testing Command"""
     await ctx.send('Hello!')
 
+# Command: Crack
 @bot.command(name='crack')
 async def identify_hash(ctx, hash_input):
     """
     Identifies the hash type and attempts to crack the password with rockyou.txt
 
-    param:hash_input = The input hash to be identified and cracked
+    Example command: ^crack 68e109f0f40ca72a15e05cc22786f8e6
     """
     async with ctx.typing():
         result = await crack_password(hash_input)
@@ -39,7 +42,7 @@ async def crack_password(hash_input):
     """
     Attempts to crack the password for a given hash with rockyou.txt
 
-    param:hash_input: The input hash to be cracked
+    Example command: ^crack 68e109f0f40ca72a15e05cc22786f8e6
     """
     # Hash formats for identification
     hash_formats = {
@@ -103,9 +106,7 @@ def hash_password(password, hash_type):
     """
     Hashes a password using the specified hash type
 
-    :param password: The password to be hashed
-    :param hash_type: The hash algorithm to use
-    :return: The hashed password
+    Example usage: hash_password('password123', 'MD5')
     """
     if hash_type == 'MD5':
         return hashlib.new('md5', password.encode()).hexdigest()
@@ -133,6 +134,7 @@ def hash_password(password, hash_type):
 
     return None  # Return None if the hash_type is not recognized
 
+# Command: Time
 @bot.command(name='time')
 async def get_time(ctx, timezone_str=None):
     """
@@ -142,8 +144,6 @@ async def get_time(ctx, timezone_str=None):
     """
     if timezone_str:
         await display_time(ctx, timezone_str)
-
-
     else:
         user_timezone = get_user_timezone(ctx.author)
         await display_time(ctx, user_timezone.zone)
@@ -161,8 +161,7 @@ def get_timezone(timezone_str):
     """
     Retrieves the timezone object based on the provided timezone string.
 
-    :param timezone_str: The timezone string.
-    :return: The timezone object.
+    Example usage: get_timezone('America/New_York')
     """
     try:
         # Attempt to create timezone using standard format
@@ -224,8 +223,7 @@ def get_user_timezone(user):
     Retrieves the user's timezone based on their Discord user ID from the JSON file.
     Assumes the user ID is the key in the JSON file.
 
-    :param user: The Discord user.
-    :return: The user's timezone.
+    Example usage: get_user_timezone(ctx.author)
     """
     try:
         with open(timezones_file, 'r') as file:
@@ -235,20 +233,32 @@ def get_user_timezone(user):
     except FileNotFoundError:
         return get_timezone('UTC')  # Return UTC timezone by default
 
+# Command: Help
 @bot.command(name='help')
 async def custom_help(ctx):
-    """Displays a custom help message with information about available commands."""
+    """
+    Displays a detailed help message with information about available commands.
+    """
     help_message = (
-        f"**General Commands:**\n"
-        "* `^hello`: A greeting/testing command, the bot should respond with 'Hello!'.\n"
-        "* `^time [timezone]`: Displays the current time in the specified timezone or the user's set timezone.\n"
-        " * Example: `^time UTC` or `^time America/New_York`\n"
-	"**Technical Commands:**\n"
-	"* `^crack <hash>`: Identifies the hash type and attempts to crack the password with the rockyou.txt worldlist. For more information on the hash types support reference the Github Page.\n"
-        " *  Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
+        "### General Commands:\n"
+        "- `^hello`: A greeting/testing command. The bot responds with 'Hello!'.\n\n"
+        "### Time Commands:\n"
+        "- `^time [timezone]`: Displays the current time in the specified timezone or the user's set timezone.\n"
+        "  - Examples:\n"
+        "   - `^time UTC`\n"
+        "   - `^time America/New_York`\n"
+        "- `^settimezone <timezone>`: Sets the timezone for the user in the server.\n"
+        "  - Example: `^settimezone UTC`\n\n"
+        "### Technical Commands:\n"
+        "- `^crack <hash>`: Identifies the hash type and attempts to crack the password with the rockyou.txt wordlist.\n"
+        "  For more information on the supported hash types, refer to the GitHub page.\n"
+        "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n\n"
+        "Note: Replace square brackets in commands with actual values."
     )
+
     await ctx.send(help_message)
 
+# Command: Settimezone
 @bot.command(name='settimezone')
 async def set_user_timezone(ctx, timezone_str):
     """
@@ -268,8 +278,7 @@ def save_user_timezone(user_id, timezone_str):
     """
     Saves the user's timezone to a JSON file.
 
-    :param user_id: The user's ID.
-    :param timezone_str: The timezone string.
+    Example usage: save_user_timezone(ctx.author.id, 'UTC')
     """
     try:
         with open(timezones_file, 'r') as file:
@@ -282,4 +291,5 @@ def save_user_timezone(user_id, timezone_str):
     with open(timezones_file, 'w') as file:
         json.dump(user_timezones, file)
 
+# Bot Token
 bot.run('TOKEN')
