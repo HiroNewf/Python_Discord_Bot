@@ -174,7 +174,6 @@ def get_timezone(timezone_str):
     abbreviations_mapping = {
         'PST': 'America/Los_Angeles',
         'JST': 'Asia/Tokyo',
-        'UTC': 'UTC',
         'EST': 'America/New_York',
         'CST': 'America/Chicago',
         'MST': 'America/Denver',
@@ -212,7 +211,6 @@ def get_timezone(timezone_str):
         'UTC-10:00': 'Pacific/Honolulu',
         'UTC-11:00': 'Pacific/Pago_Pago',
         'UTC-12:00': 'Pacific/Wake',
-        # ... (other UTC offsets)
     }
 
     mapped_timezone = abbreviations_mapping.get(timezone_str) or utc_offsets_mapping.get(timezone_str)
