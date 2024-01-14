@@ -1,4 +1,4 @@
-# Python_Discord_Bot-WIP
+# PWN_Discord_Bot-WIP
 ## General 
 PWN is a discord bot built in python that provides many different commands, but its main focus is useful cybersecurity commands for both technical and non technical users. This bot is very much a work in progress and will continue to get new commands and updates as times goes on. For now its primiary functions are telling the time in any timezone, cracking password hashes with the rockyou.txt wordlist, and checking URL's for suspicious content using the Google Safe Browsing API. Feel free to contribute to this project or fork and/or self host the bot and use it your own purposes. This is and will continue to be a completely open source project. For more information about self hosting the bot reference the bottom of this readme. 
 
