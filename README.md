@@ -34,7 +34,3 @@ Currently I do not have a server setup to host this bot so it is just being host
 9. Download the rockyou.txt wordlist from github and place it in the same directory as your bot.py file.
 10. Go to the computer/VM that you will be hosting the bot on and run the `bot.py` file with the command `python3 bot.py`. This should start up the bot and changes its discord activity status from invisible to online. Now the bot should respond to commands and everything should work as intended.
 11. Make sure to check back on this repo regularly and update your bot.py file to the newest version to continue to get patches and updates for your self hosted version of the bot. 
-
-### Screenshots
-Eh I'll finish this ReadMe later, but hey look! The bot does things... sometimes
-![image](https://github.com/HiroNewf/Python_Discord_Bot/assets/64501695/e86236de-ae85-44ef-a3b2-32b48f4d5b18)
