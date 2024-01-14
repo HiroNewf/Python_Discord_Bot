@@ -1,4 +1,4 @@
-# PWN_Discord_Bot-WIP
+# PWN_Discord_Bot
 
 ## General
 
