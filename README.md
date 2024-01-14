@@ -25,5 +25,5 @@ PWN has a handful of useful commands and uses the prefix '^':
 
 ## Self Hosting / Usage
 
-Eh I'll make this ReadMe later, but hey look! The bot does things... sometimes
+Eh I'll make finish ReadMe later, but hey look! The bot does things... sometimes
 ![image](https://github.com/HiroNewf/Python_Discord_Bot/assets/64501695/e86236de-ae85-44ef-a3b2-32b48f4d5b18)
