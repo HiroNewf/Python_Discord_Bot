@@ -346,7 +346,7 @@ async def check_url_safety_google_api(url):
     }
 
     # Send request to Google Safe Browsing API
-    response = requests.post(f"{api_endpoint}?key={api_key}", json=payload, headers=headers)
+    response = requests.post(f"{api_endpoint}?key={google_api_key}", json=payload, headers=headers)
 
     # Check response
     if response.status_code == 200:
