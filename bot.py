@@ -247,27 +247,26 @@ def get_user_timezone(user):
 # Command: Help
 @bot.command(name='help')
 async def custom_help(ctx):
-    """
-    Displays a detailed help message with information about available commands.
-    """
-    help_message = (
-        "### General Commands:\n"
-        "- `^hello`: A greeting/testing command. The bot responds with 'Hello!'.\n\n"
-        "### Time Commands:\n"
-        "- `^time [timezone]`: Displays the current time in the specified timezone or the user's set timezone.\n"
+    help_intro = (
+        "PWN has a handful of useful commands and uses the prefix '^':\n\n"
+        "- `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples\n"
+        "- `^hello`: A greeting/testing command. This command should just respond with 'Hello!' and is mainly just used as a sort of ping command to make sure the bot is up\n"
+        "- `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York). If no timezone argument is given by the user than it will default to the user's set timezone, if the user has no set timezone than it will default to UTC time.\n"
         "  - Examples:\n"
-        "   - `^time UTC`\n"
-        "   - `^time America/New_York`\n"
-        "- `^settimezone <timezone>`: Sets the timezone for the user in the server.\n"
-        "  - Example: `^settimezone UTC`\n\n"
-        "### Technical Commands:\n"
-        "- `^crack <hash>`: Identifies the hash type and attempts to crack the password with the rockyou.txt wordlist.\n"
-        "  For more information on the supported hash types, refer to the GitHub page.\n"
-        "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n\n"
-        "Note: Replace square brackets in commands with actual values."
+        "    - `^time JST`\n"
+        "    - `^time`\n"
+        "    - `^time UTC-06:00`\n"
+        "    - `^time Asia/Shanghai`\n"
+        "- `^settimezone [timezone]`: Sets the timezone for the user running the command (this will be their default timezone when running the `^time` command with no provided timezone argument). Supports all of the known timezone formats that the `^time` command does.\n"
+        "  - Example: `^settimezone America/Anchorage`\n"
+        "- `^crack [hash]`: Identifies the hash type provided and then attempts to crack the hash with the rockyou.tct wordlist. If the hash it cracked it will output the password and the hash type. If the password is not found the user will be informed that that is the case.\n"
+        "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
+        "- `^URL_Checker [URL]`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs that information to the user.\n"
+        "  - Example: `^URL_Checker https://google.com`\n"
+        "- `^whoami`: Provides information about the bot, including its purpose and how to contribute.\n"
     )
 
-    await ctx.send(help_message)
+    await ctx.send(help_intro)
 
 # Command: Settimezone
 @bot.command(name='settimezone')
@@ -358,6 +357,22 @@ async def check_url_safety_google_api(url):
             return f"The URL '{url}' is safe according to Google Safe Browsing API."
     else:
         return f"Failed to check the safety of the URL '{url}' using Google Safe Browsing API."
+
+# whoami command
+@bot.command(name='whoami')
+async def who_am_i(ctx):
+    whoami_message = (
+        "I am a Discord bot built in Python and made by HiroNewf. I provide many different commands, "
+        "but my main focus is useful cybersecurity commands for both technical and non-technical users alike. "
+        "I am very much a work in progress and will continue to get new commands and updates as time goes on. "
+        "For now, my primary functions are telling the time in any timezone, cracking password hashes with the "
+        "rockyou.txt wordlist, and checking URLs for suspicious content using the Google Safe Browsing API. "
+        "Feel free to contribute to me or fork and/or self-host me and use me for your own purposes. "
+        "I am and will continue to be a completely open-source project. To see my code go to my GitHub page [here]"
+        "(https://github.com/HiroNewf/PWN_Discord_Bot)."
+    )
+
+    await ctx.send(whoami_message)
 
 # Bot Token
 bot.run(bot_token)
