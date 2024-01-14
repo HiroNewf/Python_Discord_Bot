@@ -20,8 +20,8 @@ PWN has a handful of useful commands and uses the prefix '^':
     - Example: `^settimezone America/Anchorage`
 - `^crack`: Identifies the hash type provided and then attempts to crack the hash with the rockyou.tct wordlist. If the hash it cracked it will output the password and the hash type. If the password is not found the user will be informed that that is the case.
     - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`
-- `^URL_Checker`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs said information to the user.
-    - Example: `^URL_Checker <https://google.com`>
+- `^URL_Checker`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs that information to the user.
+    - Example: `^URL_Checker https://google.com`>
 
 ## Self Hosting / Usage
 
