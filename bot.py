@@ -7,6 +7,7 @@ import pytz
 import hashlib
 import bcrypt
 import json
+import requests
 
 intents = discord.Intents.all()
 
@@ -14,6 +15,16 @@ bot = commands.Bot(command_prefix="^", intents=intents, help_command=None)
 
 rockyou_path = 'rockyou.txt'
 timezones_file = 'user_timezones.json'
+
+# Load bot TOKEN from config.json
+with open('config.json', 'r') as config_file:
+    config_data = json.load(config_file)
+    bot_token = config_data.get('token')
+
+# Load Google API key from api_keys.json
+with open('api_keys.json', 'r') as api_keys_file:
+    api_keys_data = json.load(api_keys_file)
+    google_api_key = api_keys_data.get('google_api_key')
 
 # Event: Bot is ready
 @bot.event
@@ -291,5 +302,64 @@ def save_user_timezone(user_id, timezone_str):
     with open(timezones_file, 'w') as file:
         json.dump(user_timezones, file)
 
+# Command: URL_Checker
+@bot.command(name='URL_Checker')
+async def check_url_safety(ctx, url):
+    """
+    Checks the safety of a given URL using Google Safe Browsing API.
+
+    :param url: The URL to check.
+    """
+    async with ctx.typing():
+        result = await check_url_safety_google_api(url)
+    await ctx.send(result)
+
+async def check_url_safety_google_api(url):
+    """
+    Checks the safety of a given URL using Google Safe Browsing API.
+
+    :param url: The URL to check.
+    :return: A message indicating whether the URL is safe or not.
+    """
+    # Google Safe Browsing API Key
+    api_key = 'AIzaSyBJ0UEq8yPxcpB93-iobfkWNHtktQroroc'
+
+    # Google Safe Browsing API Endpoint
+    api_endpoint = 'https://safebrowsing.googleapis.com/v4/threatMatches:find'
+
+    # Request payload
+    payload = {
+        "client": {
+            "clientId": "your-client-id",
+            "clientVersion": "1.0"
+        },
+        "threatInfo": {
+            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE"],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [
+                {"url": url}
+            ]
+        }
+    }
+
+    # Headers
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    # Send request to Google Safe Browsing API
+    response = requests.post(f"{api_endpoint}?key={api_key}", json=payload, headers=headers)
+
+    # Check response
+    if response.status_code == 200:
+        json_response = response.json()
+        if 'matches' in json_response and json_response['matches']:
+            return f"The URL '{url}' is NOT safe according to Google Safe Browsing API."
+        else:
+            return f"The URL '{url}' is safe according to Google Safe Browsing API."
+    else:
+        return f"Failed to check the safety of the URL '{url}' using Google Safe Browsing API."
+
 # Bot Token
-bot.run('TOKEN')
+bot.run(bot_token)
