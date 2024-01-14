@@ -32,6 +32,7 @@ Currently I do not have a server setup to host this bot so it is just being host
 6. Generate an invite URL for your bot in the OAuth2 tab of your Discord Developers page. Select "bot" for the scope and currently the bot only needs the permissions of "Send Messages" and "Read Messages/View Channels", this may change in the future and you could always just select Administrator privileges for the sake of future proofing.
 7. Copy and paste the link into a new tab in your browser and select the discord server you want to add the bot to. (Make sure you have the permissions in said discord server to invite bots with whatever perms you gave the bot in the previous step).
 8. Go to the computer/VM that you will be hosting the bot on and run the `bot.py` file with the command `python3 bot.py`. This should start up the bot and changes its discord activity status from invisible to online. Now the bot should respond to commands and everything should work as intended.
+9. Make sure to check back on this repo regularly and update your bot.py file to the newest version to continue to get patches and updates for your self hosted version of the bot. 
 
 ### Screenshots
 Eh I'll finish this ReadMe later, but hey look! The bot does things... sometimes
