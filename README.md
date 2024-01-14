@@ -5,7 +5,7 @@ PWN is a discord bot built in python that provides many different commands, but 
 ## Commands
 PWN has a handful of useful commands and uses the prefix '^':
 
-* `^help`: A general help command that lists out all of the commands the bot support and provides general useage information as well as command examples
+* `^help`: A general help command that lists out all of the commands the bot supports and provides general useage information as well as command examples
 * `^hello`: A greeting/testing command. This command should just respond with "Hello!" and is mainly just used as a sort of ping command to make sure the bot is up
 * `^time`: Displays the time and allows for an optional timezone arguement that supports a varity of timezone formats (ETC, UTC+04:00, America/New_York). If no timezone arguement is given by the user than it will default to the user's set timezone, if the user has no set timezone than it will default to UTC time. 
   * Examples:
