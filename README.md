@@ -20,6 +20,7 @@ PWN has a handful of useful commands and uses the prefix '^':
     - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`
 - `^URL_Checker [URL]`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs that information to the user.
     - Example: `^URL_Checker https://google.com`
+- `^whoami`: Provides information about the bot, including its purpose and how to contribute.
 
 ## Self Hosting / Usage
 Currently I do not have a server setup to host this bot so it is just being hosted by a VM of mine on my primary computer. This of course means that it's uptime is terrible and while I do plan to fix this issue in the future, you may be interested in hosting the bot yourself. Rather you want to host it in it's current or add more commands / changes and then host your forked version the steps will be the same and I will give a high level overview of those steps below.
