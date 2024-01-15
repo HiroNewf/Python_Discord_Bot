@@ -8,8 +8,22 @@ import hashlib
 import bcrypt
 import json
 import requests
+import logging
+import os
+from pathlib import Path
 
 intents = discord.Intents.all()
+
+# Set up logging configuration
+log_folder = "Logs"
+current_month_year = datetime.now().strftime("%B %Y")
+log_folder_path = Path(log_folder) / current_month_year
+log_folder_path.mkdir(parents=True, exist_ok=True)
+
+# Configure log file path
+log_file_path = log_folder_path / f"{datetime.now().strftime('%Y-%m-%d')}.log"
+
+logging.basicConfig(filename=log_file_path, level=logging.INFO)
 
 bot = commands.Bot(command_prefix="^", intents=intents, help_command=None)
 
@@ -30,6 +44,21 @@ with open('api_keys.json', 'r') as api_keys_file:
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
+    
+# Log commands and responses
+@bot.event
+async def on_command(ctx):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    command_log = f"[{timestamp}] Command Received: {ctx.message.content}"
+    print(command_log)  # Output to console
+    logging.info(command_log)  # Log to file
+
+@bot.event
+async def on_command_completion(ctx):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    response_log = f"[{timestamp}] Response Sent: {ctx.message.content} -> {ctx.message.clean_content}"
+    print(response_log)  # Output to console
+    logging.info(response_log)  # Log to file
 
 # Command: Hello
 @bot.command(name='hello')
