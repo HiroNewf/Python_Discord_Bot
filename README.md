@@ -40,7 +40,7 @@ Currently I do not have a server setup to host this bot so it is just being host
 3. Replace the placeholder of "your_bot_token_here" in the config.json file with your bot token (do not expose this publicly).
 4. Get yourself a Google API key by going to the Google Cloud Console, starting a new project and generating an API key for yourself (do not expose this publicly).
 5. Take your Google API key and replace the placeholder of "your_google_api_key_here" in the api_keys.json file with your API key.
-6. Get an API key for Have I Been Pwned [here](https://haveibeenpwned.com/API/Key) (or skip if you do not desire to use the advanced commands of this bot)
+6. Get an API key for Have I Been Pwned [here](https://haveibeenpwned.com/API/Key) (or skip this step if you do not desire to use the advanced commands of this bot)
 7. Take your HIBP API key and replace the placeholder of "your_hibp_api_key_here" in the api_keys.json file with your API key
 8. Generate an invite URL for your bot in the OAuth2 tab of your Discord Developers page. Select "bot" for the scope and currently the bot only needs the permissions of "Send Messages" and "Read Messages/View Channels", this may change in the future and you could always just select Administrator privileges for the sake of future proofing.
 9. Copy and paste the link into a new tab in your browser and select the discord server you want to add the bot to. (Make sure you have the permissions in said discord server to invite bots with whatever perms you gave the bot in the previous step).
