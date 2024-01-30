@@ -6,7 +6,10 @@ PWN is a discord bot built in python that provides many different commands, but 
 ## Commands
 PWN has a handful of useful commands and uses the prefix '^':
 
+### General Commands
 - `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples
+- `^advanced_help`: Shows the help page for advanced commands.
+- `^whoami`: Provides information about the bot, including its purpose and how to contribute.
 - `^hello`: A greeting/testing command. This command should just respond with "Hello!" and is mainly just used as a sort of ping command to make sure the bot is up
 - `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York). If no timezone argument is given by the user than it will default to the user's set timezone, if the user has no set timezone than it will default to UTC time.
     - Examples:
@@ -16,12 +19,19 @@ PWN has a handful of useful commands and uses the prefix '^':
         - `^time Asia/Shanghai`
 - `^settimezone [timezone]`: Sets the timezone for the user running the command (this will be their default timezone when running the `^time` command with no provided timezone argument). Supports all of the known timezone formats that the `^time` command does.
     - Example: `^settimezone America/Anchorage`
+### Technical Commands
 - `^crack [hash]`: Identifies the hash type provided and then attempts to crack the hash with the rockyou.tct wordlist. If the hash it cracked it will output the password and the hash type. If the password is not found the user will be informed that that is the case.
     - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`
 - `^URL_Checker [URL]`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs that information to the user.
     - Example: `^URL_Checker https://google.com`
-- `^whoami`: Provides information about the bot, including its purpose and how to contribute.
-
+### Advanced Commands
+> Note: the bot does not store any of the emails/passwords you run through these commands, even in the logs, but if still do not want to risk exposing this information you can do to the Have I Been Pwned website or self host the bot to achieve the same results with less risk on your part. These commands are mostly a proof of concept and are not the best way at making sure your data is secure.
+- `^advanced_commands`: A command used to enable or disable all of the advanced commands of this discord bot, it is set to disabled by default.
+ - Examples:
+    - `^advanced_commands enable`
+    - `^advanced_commands disable`
+- `^email_checker`: This command will take the provided email and check it against Have I Been Pwned database to see if it has been exposed in any known breaches. Please do **NOT** provide your email as an argument for the command, the bot will DM you for the email after you run the `^email_checker` command with no arguments. 
+- `^password_checker`: This command will take the provided password and check it against Have I Been Pwned database to see if it has been exposed in any known breaches. Please do **NOT** provide your password as an argument for the command, the bot will DM you for the email after you run the `^password_checker` command with no arguments.
 ## Self Hosting / Usage
 Currently I do not have a server setup to host this bot so it is just being hosted by a VM of mine on my primary computer. This of course means that it's uptime is terrible and while I do plan to fix this issue in the future, you may be interested in hosting the bot yourself. Rather you want to host it in it's current form you wish to add more commands / changes and then host your forked version the steps will be the same and I will give a high level overview of those steps below.
 
