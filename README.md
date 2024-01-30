@@ -11,6 +11,7 @@ PWN has a handful of useful commands and uses the prefix '^':
 - `^advanced_help`: Shows the help page for advanced commands.
 - `^whoami`: Provides information about the bot, including its purpose and how to contribute.
 - `^hello`: A greeting/testing command. This command should just respond with "Hello!" and is mainly just used as a sort of ping command to make sure the bot is up
+- `^dog`: Gives you a random picture of a dog (out of like 5 images, but whatever) 
 - `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York). If no timezone argument is given by the user than it will default to the user's set timezone, if the user has no set timezone than it will default to UTC time.
     - Examples:
         - `^time JST`
