@@ -27,7 +27,7 @@ PWN has a handful of useful commands and uses the prefix '^':
     - Example: `^URL_Checker https://google.com`
 ### Advanced Commands
 > **Note**: the bot does not store any of the emails/passwords you run through these commands, even in the logs, but if still do not want to risk exposing this information you can do to the Have I Been Pwned website or self host the bot to achieve the same results with less risk on your part. These commands are mostly a proof of concept and are not the best way at making sure your data is secure.
-- `^advanced_commands`: A command used to enable or disable all of the advanced commands of this discord bot, it is set to disabled by default. Running this command requires admin permission in the given discord server to prevent normal users from changing the settings. Once the advanced commands are enabled though, any user can run the `email_checker` and `password_checker` commands shown below. 
+- `^advanced_commands`: A command used to enable or disable all of the advanced commands of this discord bot, it is set to disabled by default. Running this command requires admin permissions in the given discord server to prevent normal users from changing the settings. Once the advanced commands are enabled though, any user can run the `email_checker` and `password_checker` commands shown below. 
  - Examples:
     - `^advanced_commands enable`
     - `^advanced_commands disable`
