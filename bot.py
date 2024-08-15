@@ -43,7 +43,6 @@ with open('config.json', 'r') as config_file:
 with open('api_keys.json', 'r') as api_keys_file:
     api_keys_data = json.load(api_keys_file)
     google_api_key = api_keys_data.get('google_api_key')
-    hibp_api_key = api_keys_data.get('hibp_api_key')
 
 # Event: Bot is ready
 @bot.event
@@ -303,16 +302,7 @@ help_pages = [
      "- `^kick @user [reason]`: Kicks a user from the server with an optional reason.\n"
      "- `^ban @user [reason]`: Bans a user from the server with an optional reason.\n"
      "- `^timeout @user [time in seconds] [reason]`: Temporarily mutes a user for a specified amount of time.\n"
-     "- `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.\n"),
-    ("### Advanced Commands\n"
-    "> Note: the bot does not store any of the emails/passwords you run through these commands, even in the logs, but if still do not want to risk exposing this information you can do to the Have I Been Pwned website or self host the bot to achieve the same results with less risk on your part. These commands are mostly a proof of concept and are not the best way at making sure your data is secure. \n"
-        "- `^advanced_commands`: A command used to enable or disable all of the advanced commands of this discord bot, it is set to disabled by default.\n"
-        "  - Examples:\n"
-        "    - `^advanced_commands enable`\n"
-        "    - `^advanced_commands disable`\n"
-        "- `^email_checker`: This command will take the provided email and check it against Have I Been Pwned database to see if it has been exposed in any known breaches. Please do **NOT** provide your email as an argument for the command, the bot will DM you for the email after you run the `^email_checker` command with no arguments. \n"
-        "- `^password_checker`: This command will take the provided password and check it against Have I Been Pwned database to see if it has been exposed in any known breaches. Please do **NOT** provide your password as an argument for the command, the bot will DM you for the email after you run the `^password_checker` command with no arguments.\n"
-#    )
+     "- `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.\n")
 ]
 
 # Command: Help with pagination and page counter
@@ -481,147 +471,6 @@ async def advanced_commands(ctx, action):
         await ctx.send("Advanced commands are now disabled.")
     else:
         await ctx.send("Invalid action. Please use 'enable' or 'disable'.")
-        
-# Command: email_checker
-@bot.command(name='email_checker')
-async def email_checker(ctx, email=None):
-    """
-    Checks if the provided email has been exposed in data breaches using Have I Been Pwned.
-    Sends the email check result as a private message to the user.
-
-    Example command: ^email_checker
-    """
-    global advanced_commands_enabled
-
-    if not advanced_commands_enabled:
-        await ctx.send("Advanced commands are currently disabled. Please ask a server admin to enable them using the `^advanced_commands enable` command")
-        return
-
-    if ctx.message.guild and email:
-        # If used in a public channel with an argument, warn the user
-        warning_message = await ctx.send("Please do not expose emails publicly. Use this command without an email and the bot will DM you for the required email.")
-        await warning_message.delete(delay=10)  # Delete the warning message after 10 seconds
-
-        # Delete the user's message
-        await ctx.message.delete()
-        return
-
-    if email is None:
-        # Send a direct message to the user to request their email
-        await ctx.author.send("Please enter the email you want to check (visible only to you and the bot):")
-
-        def check_author(message):
-            return message.author == ctx.author and message.channel.type == discord.ChannelType.private
-
-        try:
-            # Wait for the user's response in a private message
-            response_message = await bot.wait_for('message', check=check_author, timeout=60)
-            email = response_message.content.strip()
-
-        except TimeoutError:
-            await ctx.author.send("Email check timed out. Please try the command again.")
-            return
-
-    # Perform email breach check
-    result = await check_email_breach(email)
-
-    # Send the result as a private message
-    await ctx.author.send(result)
-
-async def check_email_breach(email):
-    """
-    Performs an email breach check using the Have I Been Pwned service.
-
-    :param email: The email to check.
-    :return: A message indicating if the email has been exposed in data breaches.
-    """
-    # Send the email to the Have I Been Pwned service
-    hibp_api_url = f'https://haveibeenpwned.com/api/v3/breachedaccount/{email}'
-    headers = {'User-Agent': 'PWN/1.0', 'hibp-api-key': hibp_api_key}
-
-    response = requests.get(hibp_api_url, headers=headers)
-
-    if response.status_code == 200:
-        return f"The email '{email}' has been exposed in data breaches. It is recommended to update your credentials."
-    elif response.status_code == 404:
-        return f"The email '{email}' has not been exposed in known data breaches. It is considered safe."
-    else:
-        return f"Failed to check email breaches. Status code: {response.status_code}"
-
-# Command: password_checker
-@bot.command(name='password_checker')
-async def password_checker(ctx, password=None):
-    """
-    Checks if the provided password has been exposed in data breaches using Have I Been Pwned.
-    Sends the password check result as a private message to the user.
-
-    Example command: ^password_checker
-    """
-    global advanced_commands_enabled
-
-    if not advanced_commands_enabled:
-        await ctx.send("Advanced commands are currently disabled. Please ask a server admin to enable them using the `^advanced_commands enable` command")
-        return
-
-    if ctx.message.guild and password:
-        # If used in a public channel with an argument, warn the user
-        warning_message = await ctx.send("Please do not expose passwords publicly. Use this command without a password and the bot will DM you for the required password.")
-        await warning_message.delete(delay=10)  # Delete the warning message after 10 seconds
-
-        # Delete the user's message
-        await ctx.message.delete()
-        return
-
-    if password is None:
-        # Send a direct message to the user to request their password
-        await ctx.author.send("Please enter the password you want to check (visible only to you and the bot):")
-
-        def check_author(message):
-            return message.author == ctx.author and message.channel.type == discord.ChannelType.private
-
-        try:
-            # Wait for the user's response in a private message
-            response_message = await bot.wait_for('message', check=check_author, timeout=60)
-            password = response_message.content.strip()
-
-        except TimeoutError:
-            await ctx.author.send("Password check timed out. Please try the command again.")
-            return
-
-    # Perform password breach check
-    result = await check_password_breach(password)
-
-    # Send the result as a private message
-    await ctx.author.send(result)
-
-async def check_password_breach(password):
-    """
-    Performs a password breach check using the Pwned Passwords service.
-
-    :param password: The password to check.
-    :return: A message indicating if the password has been exposed in data breaches.
-    """
-    # Calculate the SHA-1 hash of the password
-    sha1_password_hash = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
-
-    # Send the first 5 characters of the hash to the Pwned Passwords service
-    prefix, suffix = sha1_password_hash[:5], sha1_password_hash[5:]
-    pwned_api_url = f'https://api.pwnedpasswords.com/range/{prefix}'
-    
-    response = requests.get(pwned_api_url)
-
-    if response.status_code == 200:
-        # Check if the suffix (remainder of the hash) is present in the response
-        breaches = [line.split(':') for line in response.text.splitlines()]
-        matching_suffix = next((suffix for suffix, count in breaches if suffix == suffix), None)
-
-        if matching_suffix:
-            return f"The password has been exposed times in data breaches. It is not secure to use."
-        else:
-            return "The password has not been exposed in known data breaches. It is considered safe to use."
-
-    else:
-        return f"Failed to check password breaches. Status code: {response.status_code}"
 
 # Command dog
 @bot.command(name='dog')
