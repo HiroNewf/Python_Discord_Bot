@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
 from discord import utils
 import re
 import asyncio
@@ -69,6 +68,307 @@ async def on_command_completion(ctx):
 async def hello(ctx):
     """Greeting / Testing Command"""
     await ctx.send('Hello!')
+
+# Help pages
+help_pages = [
+    ("### General Commands\n"
+     "- `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples.\n"
+     "- `^hello`: A greeting/testing command. This command should just respond with 'Hello!' and is mainly just used as a sort of ping command to make sure the bot is up.\n"
+     "- `^dog`: Gives you a random picture of a dog.\n"
+     "- `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York).\n"
+     "  - Examples:\n"
+     "    - `^time JST`\n"
+     "    - `^time UTC-06:00`\n"
+     "    - `^time Asia/Shanghai`\n"
+     "- `^settimezone [timezone]`: Sets the timezone for the user running the command.\n"
+     "  - Example: `^settimezone America/Anchorage`\n"),
+     
+    ("### Technical Commands\n"
+     "- `^crack [hash]`: Identifies the hash type provided and attempts to crack the hash with the rockyou.txt wordlist.\n"
+     "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
+     "- `^URL_Checker [URL]`: Runs the provided URL against Google's Safe Browsing database.\n"
+     "  - Example: `^URL_Checker https://google.com`\n"),
+     
+    ("### Resource Links\n"
+    "- `^resumeguide: Provides the link to Hiro's resume guide\n"
+    "- `^templates: Provides the link Hiro's resume templates and examples\n"
+    "- `^blog: Provides the link to Hiro's blog\n"
+    "- `^forfoxsake: Provides the link to Erubius's website & blog\n"
+    "- `^fivepillars: Provides the link to the fivepillars github page\n"),
+    
+    ("### Moderation Commands\n"
+     "- `^kick @user [reason]`: Kicks a user from the server with an optional reason.\n"
+     "- `^ban @user [reason]`: Bans a user from the server with an optional reason.\n"
+     "- `^timeout @user [time in seconds] [reason]`: Temporarily mutes a user for a specified amount of time.\n"
+     "- `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.\n")
+]
+
+# Command: Help with pagination
+@bot.command(name='help')
+async def custom_help(ctx):
+    page = 0
+    total_pages = len(help_pages)
+
+    embed = discord.Embed(title="Help Command", description=help_pages[page], color=discord.Color.blue())
+    embed.set_footer(text=f"Page {page + 1}/{total_pages}")
+    message = await ctx.send(embed=embed)
+
+    # Adding the navigation reactions
+    await message.add_reaction("⬅️")
+    await message.add_reaction("➡️")
+
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ["⬅️", "➡️"]
+
+    while True:
+        try:
+            # Wait for a reaction from the user
+            reaction, user = await bot.wait_for("reaction_add", timeout=60.0, check=check)
+
+            if str(reaction.emoji) == "➡️":
+                # Next page
+                page += 1
+                if page >= total_pages:
+                    page = 0  # Loop around to the first page
+
+            elif str(reaction.emoji) == "⬅️":
+                # Previous page
+                page -= 1
+                if page < 0:
+                    page = total_pages - 1  # Loop around to the last page
+
+            # Update the embed with the new page
+            embed = discord.Embed(title="Help Command", description=help_pages[page], color=discord.Color.blue())
+            embed.set_footer(text=f"Page {page + 1}/{total_pages}")
+            await message.edit(embed=embed)
+
+            # Remove the user's reaction so they can react again
+            await message.remove_reaction(reaction, user)
+
+        except asyncio.TimeoutError:
+            # After 60 seconds of inactivity, clear reactions and end the loop
+            await message.clear_reactions()
+            break
+
+# Command: Time
+@bot.command(name='time')
+async def get_time(ctx, timezone_str=None):
+    """
+    Displays the current time in the specified timezone or the user's set timezone.
+
+    Example command: ^time UTC
+    """
+    if timezone_str:
+        await display_time(ctx, timezone_str)
+    else:
+        user_timezone = get_user_timezone(ctx.author)
+        await display_time(ctx, user_timezone.zone)
+
+async def display_time(ctx, timezone_str):
+    try:
+        user_timezone = get_user_timezone(ctx.author) if timezone_str is None else get_timezone(timezone_str)
+    except ValueError as e:
+        return await ctx.send(str(e))
+
+    current_time = datetime.now(timezone.utc).astimezone(user_timezone)
+    await ctx.send(f'The current time is: {current_time.strftime("%Y-%m-%d %H:%M:%S %Z")}')
+
+def get_timezone(timezone_str):
+    """
+    Retrieves the timezone object based on the provided timezone string.
+
+    Example usage: get_timezone('America/New_York')
+    """
+    try:
+        # Attempt to create timezone using standard format
+        return pytz.timezone(timezone_str)
+    except pytz.UnknownTimeZoneError:
+        pass
+
+    # Try to map common abbreviations to timezone names
+    abbreviations_mapping = {
+        'PST': 'America/Los_Angeles',
+        'JST': 'Asia/Tokyo',
+        'EST': 'America/New_York',
+        'CST': 'America/Chicago',
+        'MST': 'America/Denver',
+        'PDT': 'America/Los_Angeles',
+        'MDT': 'America/Denver',
+        'CDT': 'America/Chicago',
+        'EDT': 'America/New_York',
+        # ... (other abbreviations)
+    }
+
+    # UTC offsets mapping
+    utc_offsets_mapping = {
+        'UTC+00:00': 'UTC',
+        'UTC+01:00': 'Europe/London',
+        'UTC+02:00': 'Europe/Paris',
+        'UTC+03:00': 'Europe/Moscow',
+        'UTC+04:00': 'Asia/Dubai',
+        'UTC+05:00': 'Asia/Karachi',
+        'UTC+06:00': 'Asia/Dhaka',
+        'UTC+07:00': 'Asia/Bangkok',
+        'UTC+08:00': 'Asia/Shanghai',
+        'UTC+09:00': 'Asia/Tokyo',
+        'UTC+10:00': 'Australia/Sydney',
+        'UTC+11:00': 'Pacific/Noumea',
+        'UTC+12:00': 'Pacific/Fiji',
+        'UTC-01:00': 'Atlantic/Azores',
+        'UTC-02:00': 'America/Noronha',
+        'UTC-03:00': 'America/Argentina/Buenos_Aires',
+        'UTC-04:00': 'America/New_York',
+        'UTC-05:00': 'America/Chicago',
+        'UTC-06:00': 'America/Denver',
+        'UTC-07:00': 'America/Los_Angeles',
+        'UTC-08:00': 'America/Anchorage',
+        'UTC-09:00': 'Pacific/Gambier',
+        'UTC-10:00': 'Pacific/Honolulu',
+        'UTC-11:00': 'Pacific/Pago_Pago',
+        'UTC-12:00': 'Pacific/Wake',
+    }
+
+    mapped_timezone = abbreviations_mapping.get(timezone_str) or utc_offsets_mapping.get(timezone_str)
+    if mapped_timezone:
+        return pytz.timezone(mapped_timezone)
+
+    raise ValueError(f'Invalid timezone "{timezone_str}". Please provide a valid timezone like "America/New_York", "UTC+05:00", "PST", "JST", etc.')
+
+def get_user_timezone(user):
+    """
+    Retrieves the user's timezone based on their Discord user ID from the JSON file.
+    Assumes the user ID is the key in the JSON file.
+
+    Example usage: get_user_timezone(ctx.author)
+    """
+    try:
+        with open(timezones_file, 'r') as file:
+            user_timezones = json.load(file)
+            timezone_str = user_timezones.get(str(user.id), 'UTC')
+            return get_timezone(timezone_str)
+    except FileNotFoundError:
+        return get_timezone('UTC')  # Return UTC timezone by default
+
+# Settimezone
+@bot.command(name='settimezone')
+async def set_user_timezone(ctx, timezone_str):
+    """
+    Sets the timezone for the user in the server.
+
+    Example command: ^settimezone UTC
+    """
+    try:
+        user_timezone = get_timezone(timezone_str)
+    except ValueError as e:
+        return await ctx.send(str(e))
+
+    save_user_timezone(ctx.author.id, timezone_str)
+    await ctx.send(f'Timezone set to {timezone_str} for {ctx.author.display_name}')
+
+def save_user_timezone(user_id, timezone_str):
+    """
+    Saves the user's timezone to a JSON file.
+
+    Example usage: save_user_timezone(ctx.author.id, 'UTC')
+    """
+    try:
+        with open(timezones_file, 'r') as file:
+            user_timezones = json.load(file)
+    except FileNotFoundError:
+        user_timezones = {}
+
+    user_timezones[str(user_id)] = timezone_str
+
+    with open(timezones_file, 'w') as file:
+        json.dump(user_timezones, file)
+
+# Dog
+@bot.command(name='dog')
+async def dog(ctx):
+    """
+    Sends a random dog picture from the 'Dog' folder as an embedded image.
+    
+    Example command: ^dog
+    """
+    dog_folder = 'Dog'
+
+    # Get a list of all files in the 'Dog' folder
+    dog_files = [f for f in os.listdir(dog_folder) if os.path.isfile(os.path.join(dog_folder, f))]
+
+    if not dog_files:
+        await ctx.send("No dog pictures found.")
+        return
+
+    # Select a random dog picture
+    random_dog = random.choice(dog_files)
+
+    # Create an embedded message with the dog picture
+    embed = discord.Embed(title="Here is your random dog picture", color=discord.Color.blue())
+    embed.set_image(url=f"attachment://{random_dog}")
+
+    # Send the embedded message with the dog picture
+    await ctx.send(embed=embed, file=discord.File(os.path.join(dog_folder, random_dog), random_dog))
+
+# -----------------------------------------------
+# Technical Commands
+# -----------------------------------------------
+
+# URL_Checker
+@bot.command(name='URL_Checker')
+async def check_url_safety(ctx, url):
+    """
+    Checks the safety of a given URL using Google Safe Browsing API.
+
+    :param url: The URL to check.
+    """
+    async with ctx.typing():
+        result = await check_url_safety_google_api(url)
+    await ctx.send(result)
+
+async def check_url_safety_google_api(url):
+    """
+    Checks the safety of a given URL using Google Safe Browsing API.
+
+    :param url: The URL to check.
+    :return: A message indicating whether the URL is safe or not.
+    """
+
+    # Google Safe Browsing API Endpoint
+    api_endpoint = 'https://safebrowsing.googleapis.com/v4/threatMatches:find'
+
+    # Request payload
+    payload = {
+        "client": {
+            "clientId": "your-client-id",
+            "clientVersion": "1.0"
+        },
+        "threatInfo": {
+            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE"],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [
+                {"url": url}
+            ]
+        }
+    }
+
+    # Headers
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    # Send request to Google Safe Browsing API
+    response = requests.post(f"{api_endpoint}?key={google_api_key}", json=payload, headers=headers)
+
+    # Check response
+    if response.status_code == 200:
+        json_response = response.json()
+        if 'matches' in json_response and json_response['matches']:
+            return f"The URL '{url}' is NOT safe according to Google Safe Browsing API."
+        else:
+            return f"The URL '{url}' is safe according to Google Safe Browsing API."
+    else:
+        return f"Failed to check the safety of the URL '{url}' using Google Safe Browsing API."
 
 # Command: Crack
 @bot.command(name='crack')
@@ -178,306 +478,38 @@ def hash_password(password, hash_type):
 
     return None  # Return None if the hash_type is not recognized
 
-# Command: Time
-@bot.command(name='time')
-async def get_time(ctx, timezone_str=None):
-    """
-    Displays the current time in the specified timezone or the user's set timezone.
+# -----------------------------------------------
+# Resource Links Commands
+# -----------------------------------------------
 
-    Example command: ^time UTC
-    """
-    if timezone_str:
-        await display_time(ctx, timezone_str)
-    else:
-        user_timezone = get_user_timezone(ctx.author)
-        await display_time(ctx, user_timezone.zone)
+# Resume guide
+@bot.command(name='resumeguide')
+async def resume_guide(ctx):
+    await ctx.send("https://hironewf.vercel.app/Resume-Guide")
 
-async def display_time(ctx, timezone_str):
-    try:
-        user_timezone = get_user_timezone(ctx.author) if timezone_str is None else get_timezone(timezone_str)
-    except ValueError as e:
-        return await ctx.send(str(e))
+# Resume templates
+@bot.command(name='templates')
+async def resume_guide(ctx):
+    await ctx.send("https://github.com/HiroNewf/Cybersec_resume_examples")
 
-    current_time = datetime.now(timezone.utc).astimezone(user_timezone)
-    await ctx.send(f'The current time is: {current_time.strftime("%Y-%m-%d %H:%M:%S %Z")}')
+# Hiro's blog
+@bot.command(name='blog')
+async def resume_guide(ctx):
+    await ctx.send("https://hironewf.vercel.app/")
 
-def get_timezone(timezone_str):
-    """
-    Retrieves the timezone object based on the provided timezone string.
+# Forfoxsake website
+@bot.command(name='forfoxsake')
+async def resume_guide(ctx):
+    await ctx.send("https://forfoxsake.dev/")
 
-    Example usage: get_timezone('America/New_York')
-    """
-    try:
-        # Attempt to create timezone using standard format
-        return pytz.timezone(timezone_str)
-    except pytz.UnknownTimeZoneError:
-        pass
+# Five pillars github
+@bot.command(name='fivepillars')
+async def resume_guide(ctx):
+    await ctx.send("https://github.com/DFIRmadness/5pillars/blob/master/5-Pillars.md")
 
-    # Try to map common abbreviations to timezone names
-    abbreviations_mapping = {
-        'PST': 'America/Los_Angeles',
-        'JST': 'Asia/Tokyo',
-        'EST': 'America/New_York',
-        'CST': 'America/Chicago',
-        'MST': 'America/Denver',
-        'PDT': 'America/Los_Angeles',
-        'MDT': 'America/Denver',
-        'CDT': 'America/Chicago',
-        'EDT': 'America/New_York',
-        # ... (other abbreviations)
-    }
-
-    # UTC offsets mapping
-    utc_offsets_mapping = {
-        'UTC+00:00': 'UTC',
-        'UTC+01:00': 'Europe/London',
-        'UTC+02:00': 'Europe/Paris',
-        'UTC+03:00': 'Europe/Moscow',
-        'UTC+04:00': 'Asia/Dubai',
-        'UTC+05:00': 'Asia/Karachi',
-        'UTC+06:00': 'Asia/Dhaka',
-        'UTC+07:00': 'Asia/Bangkok',
-        'UTC+08:00': 'Asia/Shanghai',
-        'UTC+09:00': 'Asia/Tokyo',
-        'UTC+10:00': 'Australia/Sydney',
-        'UTC+11:00': 'Pacific/Noumea',
-        'UTC+12:00': 'Pacific/Fiji',
-        'UTC-01:00': 'Atlantic/Azores',
-        'UTC-02:00': 'America/Noronha',
-        'UTC-03:00': 'America/Argentina/Buenos_Aires',
-        'UTC-04:00': 'America/New_York',
-        'UTC-05:00': 'America/Chicago',
-        'UTC-06:00': 'America/Denver',
-        'UTC-07:00': 'America/Los_Angeles',
-        'UTC-08:00': 'America/Anchorage',
-        'UTC-09:00': 'Pacific/Gambier',
-        'UTC-10:00': 'Pacific/Honolulu',
-        'UTC-11:00': 'Pacific/Pago_Pago',
-        'UTC-12:00': 'Pacific/Wake',
-    }
-
-    mapped_timezone = abbreviations_mapping.get(timezone_str) or utc_offsets_mapping.get(timezone_str)
-    if mapped_timezone:
-        return pytz.timezone(mapped_timezone)
-
-    raise ValueError(f'Invalid timezone "{timezone_str}". Please provide a valid timezone like "America/New_York", "UTC+05:00", "PST", "JST", etc.')
-
-def get_user_timezone(user):
-    """
-    Retrieves the user's timezone based on their Discord user ID from the JSON file.
-    Assumes the user ID is the key in the JSON file.
-
-    Example usage: get_user_timezone(ctx.author)
-    """
-    try:
-        with open(timezones_file, 'r') as file:
-            user_timezones = json.load(file)
-            timezone_str = user_timezones.get(str(user.id), 'UTC')
-            return get_timezone(timezone_str)
-    except FileNotFoundError:
-        return get_timezone('UTC')  # Return UTC timezone by default
-
-# Split the help message into multiple pages
-help_pages = [
-    ("### General Commands\n"
-     "- `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples.\n"
-     "- `^whoami`: Provides information about the bot, including its purpose and how to contribute.\n"
-     "- `^hello`: A greeting/testing command. This command should just respond with 'Hello!' and is mainly just used as a sort of ping command to make sure the bot is up.\n"
-     "- `^dog`: Gives you a random picture of a dog.\n"
-     "- `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York).\n"
-     "  - Examples:\n"
-     "    - `^time JST`\n"
-     "    - `^time UTC-06:00`\n"
-     "    - `^time Asia/Shanghai`\n"
-     "- `^settimezone [timezone]`: Sets the timezone for the user running the command.\n"
-     "  - Example: `^settimezone America/Anchorage`\n"),
-     
-    ("### Technical Commands\n"
-     "- `^crack [hash]`: Identifies the hash type provided and attempts to crack the hash with the rockyou.txt wordlist.\n"
-     "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
-     "- `^URL_Checker [URL]`: Runs the provided URL against Google's Safe Browsing database.\n"
-     "  - Example: `^URL_Checker https://google.com`\n"),
-    
-    ("### Moderation Commands\n"
-     "- `^kick @user [reason]`: Kicks a user from the server with an optional reason.\n"
-     "- `^ban @user [reason]`: Bans a user from the server with an optional reason.\n"
-     "- `^timeout @user [time in seconds] [reason]`: Temporarily mutes a user for a specified amount of time.\n"
-     "- `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.\n")
-]
-
-# Command: Help with pagination and page counter
-@bot.command(name='help')
-async def custom_help(ctx):
-    # Initial page
-    current_page = 0
-    total_pages = len(help_pages)
-
-    # Create and send the first embed with a footer showing the page counter
-    embed = discord.Embed(description=help_pages[current_page])
-    embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
-    message = await ctx.send(embed=embed)
-
-    # Add navigation reactions
-    await message.add_reaction('⬅️')
-    await message.add_reaction('➡️')
-
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) in ['⬅️', '➡️'] and reaction.message.id == message.id
-
-    # Pagination logic
-    while True:
-        try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
-
-            if str(reaction.emoji) == '⬅️' and current_page > 0:
-                current_page -= 1
-                embed = discord.Embed(description=help_pages[current_page])
-                embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
-                await message.edit(embed=embed)
-                await message.remove_reaction(reaction, user)
-
-            elif str(reaction.emoji) == '➡️' and current_page < total_pages - 1:
-                current_page += 1
-                embed = discord.Embed(description=help_pages[current_page])
-                embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
-                await message.edit(embed=embed)
-                await message.remove_reaction(reaction, user)
-
-        except discord.TimeoutError:
-            break
-
-# Command: Settimezone
-@bot.command(name='settimezone')
-async def set_user_timezone(ctx, timezone_str):
-    """
-    Sets the timezone for the user in the server.
-
-    Example command: ^settimezone UTC
-    """
-    try:
-        user_timezone = get_timezone(timezone_str)
-    except ValueError as e:
-        return await ctx.send(str(e))
-
-    save_user_timezone(ctx.author.id, timezone_str)
-    await ctx.send(f'Timezone set to {timezone_str} for {ctx.author.display_name}')
-
-def save_user_timezone(user_id, timezone_str):
-    """
-    Saves the user's timezone to a JSON file.
-
-    Example usage: save_user_timezone(ctx.author.id, 'UTC')
-    """
-    try:
-        with open(timezones_file, 'r') as file:
-            user_timezones = json.load(file)
-    except FileNotFoundError:
-        user_timezones = {}
-
-    user_timezones[str(user_id)] = timezone_str
-
-    with open(timezones_file, 'w') as file:
-        json.dump(user_timezones, file)
-
-# Command: URL_Checker
-@bot.command(name='URL_Checker')
-async def check_url_safety(ctx, url):
-    """
-    Checks the safety of a given URL using Google Safe Browsing API.
-
-    :param url: The URL to check.
-    """
-    async with ctx.typing():
-        result = await check_url_safety_google_api(url)
-    await ctx.send(result)
-
-async def check_url_safety_google_api(url):
-    """
-    Checks the safety of a given URL using Google Safe Browsing API.
-
-    :param url: The URL to check.
-    :return: A message indicating whether the URL is safe or not.
-    """
-
-    # Google Safe Browsing API Endpoint
-    api_endpoint = 'https://safebrowsing.googleapis.com/v4/threatMatches:find'
-
-    # Request payload
-    payload = {
-        "client": {
-            "clientId": "your-client-id",
-            "clientVersion": "1.0"
-        },
-        "threatInfo": {
-            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE"],
-            "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": ["URL"],
-            "threatEntries": [
-                {"url": url}
-            ]
-        }
-    }
-
-    # Headers
-    headers = {
-        "Content-Type": "application/json"
-    }
-
-    # Send request to Google Safe Browsing API
-    response = requests.post(f"{api_endpoint}?key={google_api_key}", json=payload, headers=headers)
-
-    # Check response
-    if response.status_code == 200:
-        json_response = response.json()
-        if 'matches' in json_response and json_response['matches']:
-            return f"The URL '{url}' is NOT safe according to Google Safe Browsing API."
-        else:
-            return f"The URL '{url}' is safe according to Google Safe Browsing API."
-    else:
-        return f"Failed to check the safety of the URL '{url}' using Google Safe Browsing API."
-
-# Command whoami
-@bot.command(name='whoami')
-async def who_am_i(ctx):
-    whoami_message = (
-        "I am a Discord bot built in Python and made by HiroNewf. I provide many different commands, "
-        "but my main focus is useful cybersecurity commands for both technical and non-technical users alike. "
-        "I am very much a work in progress and will continue to get new commands and updates as time goes on. "
-        "For now, my primary functions are telling the time in any timezone, cracking password hashes with the "
-        "rockyou.txt wordlist, and checking URLs for suspicious content using the Google Safe Browsing API. "
-        "Feel free to contribute to me or fork and/or self-host me and use me for your own purposes. "
-        "I am and will continue to be a completely open-source project. To see my code go to my GitHub page [here]"
-        "(https://github.com/HiroNewf/PWN_Discord_Bot)."
-    )
-
-    await ctx.send(whoami_message)
-
-# Command dog
-@bot.command(name='dog')
-async def dog(ctx):
-    """
-    Sends a random dog picture from the 'Dog' folder as an embedded image.
-    
-    Example command: ^dog
-    """
-    dog_folder = 'Dog'
-
-    # Get a list of all files in the 'Dog' folder
-    dog_files = [f for f in os.listdir(dog_folder) if os.path.isfile(os.path.join(dog_folder, f))]
-
-    if not dog_files:
-        await ctx.send("No dog pictures found.")
-        return
-
-    # Select a random dog picture
-    random_dog = random.choice(dog_files)
-
-    # Create an embedded message with the dog picture
-    embed = discord.Embed(title="Here is your random dog picture", color=discord.Color.blue())
-    embed.set_image(url=f"attachment://{random_dog}")
-
-    # Send the embedded message with the dog picture
-    await ctx.send(embed=embed, file=discord.File(os.path.join(dog_folder, random_dog), random_dog))
+# -----------------------------------------------
+# Moderation Commands
+# -----------------------------------------------
 
 # Kick
 @bot.command(name="kick")
