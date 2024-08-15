@@ -90,11 +90,11 @@ help_pages = [
      "  - Example: `^URL_Checker https://google.com`\n"),
      
     ("### Resource Links\n"
-    "- `^resumeguide`: Provides the link to Hiro's resume guide\n"
-    "- `^templates`: Provides the link Hiro's resume templates and examples\n"
-    "- `^blog`: Provides the link to Hiro's blog\n"
-    "- `^forfoxsake`: Provides the link to Erubius's website & blog\n"
-    "- `^fivepillars`: Provides the link to the fivepillars github page\n"),
+    "- `^resumeguide`: Provides the link to Hiro's resume guide.\n"
+    "- `^templates`: Provides the link Hiro's resume templates and examples.\n"
+    "- `^blog`: Provides the link to Hiro's blog.\n"
+    "- `^forfoxsake`: Provides the link to Erubius's website & blog.\n"
+    "- `^fivepillars`: Provides the link to the fivepillars github page.\n"),
     
     ("### Moderation Commands\n"
      "- `^kick @user [reason]`: Kicks a user from the server with an optional reason.\n"
