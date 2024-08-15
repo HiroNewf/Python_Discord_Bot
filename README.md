@@ -1,15 +1,13 @@
 # PWN_Discord_Bot
 
 ## General
-PWN is a discord bot built in python that provides many different commands, but its main focus is useful cybersecurity commands for both technical and non technical users. This bot is very much a work in progress and will continue to get new commands and updates as times goes on. To invite this bot to your own discord server go [here](https://discord.com/api/oauth2/authorize?client_id=1190778555903258765&permissions=3072&scope=bot).
+PWN is a discord bot built in python that is very much a work in progress and will continue to get new commands and updates as times goes on. To invite this bot to your own discord server go [here](https://discord.com/api/oauth2/authorize?client_id=1190778555903258765&permissions=3072&scope=bot).
 
 ## Commands
 PWN has a handful of useful commands and uses the prefix '^':
 
 ### General Commands
 - `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples
-- `^advanced_help`: Shows the help page for advanced commands.
-- `^whoami`: Provides information about the bot, including its purpose and how to contribute.
 - `^hello`: A greeting/testing command. This command should just respond with "Hello!" and is mainly just used as a sort of ping command to make sure the bot is up
 - `^dog`: Gives you a random picture of a dog (out of like 5 images, but whatever) 
 - `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York). If no timezone argument is given by the user than it will default to the user's set timezone, if the user has no set timezone than it will default to UTC time.
@@ -20,11 +18,26 @@ PWN has a handful of useful commands and uses the prefix '^':
         - `^time Asia/Shanghai`
 - `^settimezone [timezone]`: Sets the timezone for the user running the command (this will be their default timezone when running the `^time` command with no provided timezone argument). Supports all of the known timezone formats that the `^time` command does.
     - Example: `^settimezone America/Anchorage`
+
 ### Technical Commands
 - `^crack [hash]`: Identifies the hash type provided and then attempts to crack the hash with the rockyou.txt wordlist. If the hash it cracked it will output the password and the hash type. If the password is not found the user will be informed that that is the case.
     - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`
 - `^URL_Checker [URL]`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs that information to the user.
     - Example: `^URL_Checker https://google.com`
+
+### Resource Link Commands
+- `^resumeguide`: Provides the link to Hiro's resume guide.
+- `^templates`: Provides the link Hiro's resume templates and examples.
+- `^blog`: Provides the link to Hiro's blog.
+- `^forfoxsake`: Provides the link to Erubius's website & blog.
+- `^fivepillars`: Provides the link to the fivepillars github page.
+
+### Moderation Commands 
+- `^kick @user [reason]`: Kicks a user from the server with an optional reason.
+- `^ban @user [reason]`: Bans a user from the server with an optional reason.
+- `^timeout @user [time in seconds] [reason]`: Temporarily mutes a user for a specified amount of time.
+- `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.
+
 ## Self Hosting / Usage
 Currently I do not have a server setup to host this bot so it is just being hosted by a VM of mine on my primary computer. This of course means that it's uptime is terrible and while I do plan to fix this issue in the future, you may be interested in hosting the bot yourself. Rather you want to host it in it's current form you wish to add more commands / changes and then host your forked version the steps will be the same and I will give a high level overview of those steps below.
 
