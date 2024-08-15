@@ -13,6 +13,7 @@ import logging
 import os
 import random
 from pathlib import Path
+from googletrans import Translator
 
 intents = discord.Intents.all()
 
@@ -63,6 +64,10 @@ async def on_command_completion(ctx):
     print(response_log)  # Output to console
     logging.info(response_log)  # Log to file
 
+# -----------------------------------------------
+# General Commands
+# -----------------------------------------------
+
 # Command: Hello
 @bot.command(name='hello')
 async def hello(ctx):
@@ -81,7 +86,15 @@ help_pages = [
      "    - `^time UTC-06:00`\n"
      "    - `^time Asia/Shanghai`\n"
      "- `^settimezone [timezone]`: Sets the timezone for the user running the command.\n"
-     "  - Example: `^settimezone America/Anchorage`\n"),
+     "  - Example: `^settimezone America/Anchorage`\n"
+          "- `^poll [question] [options...]`: Creates a poll with the given question and options. You can provide up to 9 options.\n"
+     "  - Example: `^poll What's your favorite color? Red Blue Green`\n"
+     "- `^translate [language] [text]`: Translates the provided text into the specified language.\n"
+     "  - Example: `^translate es Hello, world!`\n"
+     "- `^8ball [question]`: Ask the magic 8-ball a question and receive an answer.\n"
+     "  - Example: `^8ball Will it rain today?`\n"
+     "- `^role_info [role_name]`: Provides information about a specific role, including members who have that role.\n"
+     "  - Example: `^role_info Admin`\n"),
      
     ("### Technical Commands\n"
      "- `^crack [hash]`: Identifies the hash type provided and attempts to crack the hash with the rockyou.txt wordlist.\n"
@@ -150,7 +163,61 @@ async def custom_help(ctx):
             await message.clear_reactions()
             break
 
-# Command: Time
+# Poll
+@bot.command(name='poll')
+async def poll(ctx, question, *options):
+    if len(options) < 2:
+        await ctx.send("You need to provide at least two options for the poll.")
+        return
+
+    if len(options) > 9:
+        await ctx.send("You can only provide up to 9 options.")
+        return
+
+    description = "\n".join([f"{emoji} {option}" for emoji, option in zip("🇦🇧🇨🇩🇪🇫🇬🇭🇮", options)])
+    embed = discord.Embed(title=question, description=description, color=discord.Color.blue())
+
+    message = await ctx.send(embed=embed)
+    for emoji in "🇦🇧🇨🇩🇪🇫🇬🇭🇮"[:len(options)]:
+        await message.add_reaction(emoji)
+
+# Translation
+@bot.command(name='translate')
+async def translate(ctx, language, *, text):
+    translator = Translator()
+    try:
+        translated = translator.translate(text, dest=language)
+        await ctx.send(f"**Original:** {text}\n**Translated:** {translated.text}")
+    except Exception as e:
+        await ctx.send(f"An error occurred: {e}")
+
+# 8-Ball
+@bot.command(name='8ball')
+async def eight_ball(ctx, *, question):
+    responses = [
+        "Yes", "No", "Maybe", "Ask again later", "Definitely not", "Absolutely", "I don't think so", "Yes, but..."
+    ]
+    await ctx.send(f"Question: {question}\nAnswer: {random.choice(responses)}")
+
+# Role Info 
+@bot.command(name='role_info')
+async def role_info(ctx, *, role_name):
+    role = discord.utils.get(ctx.guild.roles, name=role_name)
+    if not role:
+        await ctx.send("Role not found.")
+        return
+
+    members = [member.mention for member in ctx.guild.members if role in member.roles]
+    member_list = "\n".join(members) if members else "No members with this role."
+
+    embed = discord.Embed(title=f"Role Info: {role.name}", color=role.color)
+    embed.add_field(name="ID", value=role.id)
+    embed.add_field(name="Color", value=str(role.color))
+    embed.add_field(name="Created At", value=role.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+    embed.add_field(name="Members", value=member_list)
+    await ctx.send(embed=embed)
+
+# Time
 @bot.command(name='time')
 async def get_time(ctx, timezone_str=None):
     """
