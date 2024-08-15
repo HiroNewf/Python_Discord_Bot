@@ -39,7 +39,7 @@ PWN has a handful of useful commands and uses the prefix '^':
 - `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.
 
 ## Self Hosting / Usage
-Currently I do not have a server setup to host this bot so it is just being hosted by a VM of mine on my primary computer. This of course means that it's uptime is terrible and while I do plan to fix this issue in the future, you may be interested in hosting the bot yourself. Rather you want to host it in it's current form you wish to add more commands / changes and then host your forked version the steps will be the same and I will give a high level overview of those steps below.
+Currently I do not have a server setup to host this bot so it is just being hosted by a VM of mine on my primary computer. This of course means that it's uptime is terrible and while I do plan to fix this issue in the future, you may be interested in hosting the bot yourself. Whether you want to host it in it's current form you wish to add more commands / changes and then host your forked version the steps will be the same and I will give a high level overview of those steps below.
 
 1. Download the source-code: you need the `bot.py` file as well as the two json files and the 'Dog' folder in this repo.
 2. Setup a bot page for yourself using Discord's Developer Portal and acquire a TOKEN for your bot.
