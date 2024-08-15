@@ -18,7 +18,14 @@ PWN has a handful of useful commands and uses the prefix '^':
         - `^time Asia/Shanghai`
 - `^settimezone [timezone]`: Sets the timezone for the user running the command (this will be their default timezone when running the `^time` command with no provided timezone argument). Supports all of the known timezone formats that the `^time` command does.
     - Example: `^settimezone America/Anchorage`
-
+- `^poll [question] [options...]`: Creates a poll with the given question and options. You can provide up to 9 options.
+    - Example: `^poll What's your favorite color? Red Blue Green`
+- `^translate [language] [text]`: Translates the provided text into the specified language.
+    - Example: `^translate es Hello, world!`
+- `^8ball [question]`: Ask the magic 8-ball a question and receive an answer.
+    - Example: `^8ball Will it rain today?`
+- `^role_info [role_name]`: Provides information about a specific role, including members who have that role.
+    - Example: `^role_info Admin`
 ### Technical Commands
 - `^crack [hash]`: Identifies the hash type provided and then attempts to crack the hash with the rockyou.txt wordlist. If the hash it cracked it will output the password and the hash type. If the password is not found the user will be informed that that is the case.
     - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`
