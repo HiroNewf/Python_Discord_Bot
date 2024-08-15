@@ -452,26 +452,6 @@ async def who_am_i(ctx):
 
     await ctx.send(whoami_message)
 
-@bot.command(name='advanced_commands')
-@commands.has_permissions(administrator=True)
-async def advanced_commands(ctx, action):
-    """
-    Enable or disable advanced commands.
-
-    Example command to enable: ^advanced_commands enable
-    Example command to disable: ^advanced_commands disable
-    """
-    global advanced_commands_enabled
-
-    if action.lower() == 'enable':
-        advanced_commands_enabled = True
-        await ctx.send("Advanced commands are now enabled.")
-    elif action.lower() == 'disable':
-        advanced_commands_enabled = False
-        await ctx.send("Advanced commands are now disabled.")
-    else:
-        await ctx.send("Invalid action. Please use 'enable' or 'disable'.")
-
 # Command dog
 @bot.command(name='dog')
 async def dog(ctx):
