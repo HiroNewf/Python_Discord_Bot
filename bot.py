@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
+from discord import utils
 import re
 import asyncio
 from datetime import datetime, timezone
@@ -276,49 +278,83 @@ def get_user_timezone(user):
     except FileNotFoundError:
         return get_timezone('UTC')  # Return UTC timezone by default
 
-# Command: Help
-@bot.command(name='help')
-async def custom_help(ctx):
-    help_intro = (
-   "### General Commands \n"
-        "- `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples\n"
-        "- `^advanced_help`: Shows the help page for advanced commands.\n"
-        "- `^whoami`: Provides information about the bot, including its purpose and how to contribute.\n"
-        "- `^hello`: A greeting/testing command. This command should just respond with 'Hello!' and is mainly just used as a sort of ping command to make sure the bot is up\n"
-        "- `^dog`: Gives you a random picture of a dog \n"
-        "- `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York). If no timezone argument is given by the user than it will default to the user's set timezone, if the user has no set timezone than it will default to UTC time.\n"
-        "  - Examples:\n"
-        "    - `^time JST`\n"
-        "    - `^time UTC-06:00`\n"
-        "    - `^time Asia/Shanghai`\n"
-        "- `^settimezone [timezone]`: Sets the timezone for the user running the command (this will be their default timezone when running the `^time` command with no provided timezone argument). Supports all of the known timezone formats that the `^time` command does.\n"
-        "  - Example: `^settimezone America/Anchorage`\n"
-   "### Technical Commands \n"
-        "- `^crack [hash]`: Identifies the hash type provided and then attempts to crack the hash with the rockyou.tct wordlist. If the hash it cracked it will output the password and the hash type. If the password is not found the user will be informed that that is the case.\n"
-        "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
-        "- `^URL_Checker [URL]`: Runs the provided URL against the Google's Safe Browsing database to try and determine is the URL is safe or not and then outputs that information to the user.\n"
-        "  - Example: `^URL_Checker https://google.com`\n"
-    )
-
-    await ctx.send(help_intro)
-
-@bot.command(name='advanced_help')
-async def advanced_help(ctx):
-    """
-    Displays help information for advanced commands.
-    """
-    help_text = (
-        "### Advanced Commands \n"
-        "> Note: the bot does not store any of the emails/passwords you run through these commands, even in the logs, but if still do not want to risk exposing this information you can do to the Have I Been Pwned website or self host the bot to achieve the same results with less risk on your part. These commands are mostly a proof of concept and are not the best way at making sure your data is secure. \n"
+# Split the help message into multiple pages
+help_pages = [
+    ("### General Commands\n"
+     "- `^help`: A general help command that lists out all of the commands the bot supports and provides general usage information as well as command examples.\n"
+     "- `^whoami`: Provides information about the bot, including its purpose and how to contribute.\n"
+     "- `^hello`: A greeting/testing command. This command should just respond with 'Hello!' and is mainly just used as a sort of ping command to make sure the bot is up.\n"
+     "- `^dog`: Gives you a random picture of a dog.\n"
+     "- `^time`: Displays the time and allows for an optional timezone argument that supports a variety of timezone formats (ETC, UTC+04:00, America/New_York).\n"
+     "  - Examples:\n"
+     "    - `^time JST`\n"
+     "    - `^time UTC-06:00`\n"
+     "    - `^time Asia/Shanghai`\n"
+     "- `^settimezone [timezone]`: Sets the timezone for the user running the command.\n"
+     "  - Example: `^settimezone America/Anchorage`\n"),
+     
+    ("### Technical Commands\n"
+     "- `^crack [hash]`: Identifies the hash type provided and attempts to crack the hash with the rockyou.txt wordlist.\n"
+     "  - Example: `^crack 68e109f0f40ca72a15e05cc22786f8e6`\n"
+     "- `^URL_Checker [URL]`: Runs the provided URL against Google's Safe Browsing database.\n"
+     "  - Example: `^URL_Checker https://google.com`\n"),
+    
+    ("### Moderation Commands\n"
+     "- `^kick @user [reason]`: Kicks a user from the server with an optional reason.\n"
+     "- `^ban @user [reason]`: Bans a user from the server with an optional reason.\n"
+     "- `^timeout @user [time in seconds] [reason]`: Temporarily mutes a user for a specified amount of time.\n"
+     "- `^rename @user [new nickname]`: Renames a user to the specified nickname on the server.\n"),
+    ("### Advanced Commands\n"
+    "> Note: the bot does not store any of the emails/passwords you run through these commands, even in the logs, but if still do not want to risk exposing this information you can do to the Have I Been Pwned website or self host the bot to achieve the same results with less risk on your part. These commands are mostly a proof of concept and are not the best way at making sure your data is secure. \n"
         "- `^advanced_commands`: A command used to enable or disable all of the advanced commands of this discord bot, it is set to disabled by default.\n"
         "  - Examples:\n"
         "    - `^advanced_commands enable`\n"
         "    - `^advanced_commands disable`\n"
         "- `^email_checker`: This command will take the provided email and check it against Have I Been Pwned database to see if it has been exposed in any known breaches. Please do **NOT** provide your email as an argument for the command, the bot will DM you for the email after you run the `^email_checker` command with no arguments. \n"
         "- `^password_checker`: This command will take the provided password and check it against Have I Been Pwned database to see if it has been exposed in any known breaches. Please do **NOT** provide your password as an argument for the command, the bot will DM you for the email after you run the `^password_checker` command with no arguments.\n"
-    )
+#    )
+]
 
-    await ctx.send(help_text)
+# Command: Help with pagination and page counter
+@bot.command(name='help')
+async def custom_help(ctx):
+    # Initial page
+    current_page = 0
+    total_pages = len(help_pages)
+
+    # Create and send the first embed with a footer showing the page counter
+    embed = discord.Embed(description=help_pages[current_page])
+    embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
+    message = await ctx.send(embed=embed)
+
+    # Add navigation reactions
+    await message.add_reaction('⬅️')
+    await message.add_reaction('➡️')
+
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ['⬅️', '➡️'] and reaction.message.id == message.id
+
+    # Pagination logic
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+
+            if str(reaction.emoji) == '⬅️' and current_page > 0:
+                current_page -= 1
+                embed = discord.Embed(description=help_pages[current_page])
+                embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
+                await message.edit(embed=embed)
+                await message.remove_reaction(reaction, user)
+
+            elif str(reaction.emoji) == '➡️' and current_page < total_pages - 1:
+                current_page += 1
+                embed = discord.Embed(description=help_pages[current_page])
+                embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
+                await message.edit(embed=embed)
+                await message.remove_reaction(reaction, user)
+
+        except discord.TimeoutError:
+            break
 
 # Command: Settimezone
 @bot.command(name='settimezone')
@@ -613,6 +649,67 @@ async def dog(ctx):
 
     # Send the embedded message with the dog picture
     await ctx.send(embed=embed, file=discord.File(os.path.join(dog_folder, random_dog), random_dog))
-    
+
+# Kick
+@bot.command(name="kick")
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, member: discord.Member, *, reason=None):
+    try:
+        await member.kick(reason=reason)
+        await ctx.send(f"{member.mention} has been kicked from the server.")
+    except discord.Forbidden:
+        await ctx.send("I do not have permission to kick this member.")
+    except Exception as e:
+        await ctx.send(f"An error occurred: {e}")
+
+# Ban
+@bot.command(name="ban")
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, member: discord.Member, *, reason=None):
+    try:
+        await member.ban(reason=reason)
+        await ctx.send(f"{member.mention} has been banned from the server.")
+    except discord.Forbidden:
+        await ctx.send("I do not have permission to ban this member.")
+    except Exception as e:
+        await ctx.send(f"An error occurred: {e}")
+
+# Timeout
+@bot.command(name="timeout")
+@commands.has_permissions(moderate_members=True)
+async def timeout(ctx, member: discord.Member, time: int, *, reason=None):
+    try:
+        # Set the timeout duration
+        duration = discord.utils.utcnow() + discord.timedelta(seconds=time)
+        await member.timeout_until(duration, reason=reason)
+        await ctx.send(f"{member.mention} has been timed out for {time} seconds.")
+    except discord.Forbidden:
+        await ctx.send("I do not have permission to timeout this member.")
+    except Exception as e:
+        await ctx.send(f"An error occurred: {e}")
+
+# Rename
+@bot.command(name="rename")
+@commands.has_permissions(manage_nicknames=True)
+async def rename(ctx, member: discord.Member, *, new_nickname):
+    try:
+        old_nickname = member.nick if member.nick else member.name
+        await member.edit(nick=new_nickname)
+        await ctx.send(f"{old_nickname} has been renamed to {new_nickname}.")
+    except discord.Forbidden:
+        await ctx.send("I do not have permission to rename this member.")
+    except Exception as e:
+        await ctx.send(f"An error occurred: {e}")
+
+# Error handler to catch permission errors
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You do not have the required permissions to use this command.")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(f"Missing argument: {error.param}")
+    else:
+        await ctx.send(f"An error occurred: {error}")
+
 # Bot Token
 bot.run(bot_token)
