@@ -49,14 +49,15 @@ PWN has a handful of useful commands and uses the prefix '^':
 Currently I do not have a server setup to host this bot so it is just being hosted by a VM of mine on my primary computer. This of course means that it's uptime is terrible and while I do plan to fix this issue in the future, you may be interested in hosting the bot yourself. Whether you want to host it in it's current form you wish to add more commands / changes and then host your forked version the steps will be the same and I will give a high level overview of those steps below.
 
 1. Clone the repo.
-2. Setup a bot page for yourself using Discord's Developer Portal and acquire a TOKEN for your bot.
-3. Replace the placeholder of "your_bot_token_here" in the config.json file with your bot token (do not expose this publicly).
-4. Get yourself a Google API key by going to the Google Cloud Console, starting a new project and generating an API key for yourself (do not expose this publicly).
-5. Take your Google API key and replace the placeholder of "your_google_api_key_here" in the api_keys.json file with your API key.
-6. Generate an invite URL for your bot in the OAuth2 tab of your Discord Developers page. Select "bot" for the scope and currently the bot only needs the permissions of "Send Messages" and "Read Messages/View Channels", this may change in the future and you could always just select Administrator privileges for the sake of future proofing.
-7. Copy and paste the link into a new tab in your browser and select the discord server you want to add the bot to. (Make sure you have the permissions in said discord server to invite bots with whatever perms you gave the bot in the previous step).
-8. Download the robots.txt wordlist from Github and place it in the same directory as the bot.py file.
-9. Run the `bot.py` file with the command `python3 bot.py`. This should start up the bot and changes its discord activity status from invisible to online. Now the bot should respond to commands and everything should work as intended.
-10. Make sure to check back on this repo regularly and update your bot.py file to the newest version to continue to get patches and updates for your self hosted version of the bot. 
+2. Install the requirements `pip install -r requirements.txt`
+3. Setup a bot page for yourself using Discord's Developer Portal and acquire a TOKEN for your bot.
+4. Replace the placeholder of "your_bot_token_here" in the config.json file with your bot token (do not expose this publicly).
+5. Get yourself a Google API key by going to the Google Cloud Console, starting a new project and generating an API key for yourself (do not expose this publicly).
+6. Take your Google API key and replace the placeholder of "your_google_api_key_here" in the api_keys.json file with your API key.
+7. Generate an invite URL for your bot in the OAuth2 tab of your Discord Developers page. Select "bot" for the scope and currently the bot only needs the permissions of "Send Messages" and "Read Messages/View Channels", this may change in the future and you could always just select Administrator privileges for the sake of future proofing.
+8. Copy and paste the link into a new tab in your browser and select the discord server you want to add the bot to. (Make sure you have the permissions in said discord server to invite bots with whatever perms you gave the bot in the previous step).
+9. Download the robots.txt wordlist from Github and place it in the same directory as the bot.py file.
+10. Run the `bot.py` file with the command `python3 bot.py`. This should start up the bot and changes its discord activity status from invisible to online. Now the bot should respond to commands and everything should work as intended.
+11. Make sure to check back on this repo regularly and update your bot.py file to the newest version to continue to get patches and updates for your self hosted version of the bot. 
 
 > **Note**: Something useful to know if you are self hosting is that the bot create log files. Within the working directory of the bot it will create a folder called 'Logs' and within that folder it will create more folders for each month its year in the format of 'January 2024'. Within each of the these month folders will be .log files timestamped with the day they were created and each event within said log will also be timestamped. This could prove to be helpful when setting up and troubleshooting the bot, especially if you find yourself making modifications to the code. 
