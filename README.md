@@ -19,7 +19,7 @@ PWN has a handful of useful commands and uses the prefix '^':
 - `^settimezone [timezone]`: Sets the timezone for the user running the command (this will be their default timezone when running the `^time` command with no provided timezone argument). Supports all of the known timezone formats that the `^time` command does.
     - Example: `^settimezone America/Anchorage`
 - `^poll [question] [options...]`: Creates a poll with the given question and options. You can provide up to 9 options.
-    - Example: `^poll What's your favorite color? Red Blue Green`
+    - Example: `^poll "What's your favorite color?" Red Blue Green` - Note the quotes around your question, this is required for the command to work properly.
 - `^translate [language] [text]`: Translates the provided text into the specified language.
     - Example: `^translate es Hello, world!`
 - `^8ball [question]`: Ask the magic 8-ball a question and receive an answer.
