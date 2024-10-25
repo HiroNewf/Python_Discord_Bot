@@ -52,7 +52,7 @@ PWN has a handful of useful commands and uses the prefix '^':
 4. Replace the placeholder of "your_bot_token_here" in the config.json file with your bot token (do not expose this publicly).
 5. Get yourself a Google API key by going to the Google Cloud Console, starting a new project and generating an API key for yourself (do not expose this publicly).
 6. Take your Google API key and replace the placeholder of "your_google_api_key_here" in the api_keys.json file with your API key.
-7. Generate an invite URL for your bot in the OAuth2 tab of your Discord Developers page. Select "bot" for the scope and currently the bot only needs the permissions of "Send Messages" and "Read Messages/View Channels", this may change in the future and you could always just select Administrator privileges for the sake of future proofing.
+7. Generate an invite URL for your bot in the OAuth2 tab of your Discord Developers page. Select "bot" for the scope and currently the bot only needs the permissions of Administrator.
 8. Copy and paste the link into a new tab in your browser and select the discord server you want to add the bot to. (Make sure you have the permissions in said discord server to invite bots with whatever perms you gave the bot in the previous step).
 9. Download the robots.txt wordlist from Github and place it in the same directory as the bot.py file.
 10. Run the `bot.py` file with the command `python3 bot.py`. This should start up the bot and changes its discord activity status from invisible to online. Now the bot should respond to commands and everything should work as intended.
